@@ -102,9 +102,6 @@ public class Boot implements CommandLineRunner {
                 }
             }
             final User user = userBuilder.build();
-            if (user.getWebsiteUrl() == null) {
-                System.out.println("error");
-            }
             users.add(user);
             reader.next();
             reader.next();
