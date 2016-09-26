@@ -1,6 +1,8 @@
 package com.capslock.stackoverflow;
 
+import com.capslock.stackoverflow.mapper.TagsMapper;
 import com.capslock.stackoverflow.mapper.UserMapper;
+import com.capslock.stackoverflow.model.Tag;
 import com.capslock.stackoverflow.model.User;
 import com.google.common.base.Strings;
 import org.springframework.beans.factory.annotation.Autowired;
@@ -9,15 +11,18 @@ import org.springframework.boot.SpringApplication;
 import org.springframework.boot.autoconfigure.SpringBootApplication;
 
 import javax.xml.stream.XMLInputFactory;
+import javax.xml.stream.XMLStreamConstants;
 import javax.xml.stream.XMLStreamException;
 import javax.xml.stream.XMLStreamReader;
 import java.io.File;
 import java.io.FileInputStream;
 import java.io.FileNotFoundException;
+import java.io.IOException;
 import java.text.DateFormat;
 import java.text.ParseException;
 import java.text.SimpleDateFormat;
 import java.util.ArrayList;
+import java.util.List;
 
 /**
  * Created by alvin.
@@ -26,6 +31,8 @@ import java.util.ArrayList;
 public class Boot implements CommandLineRunner {
     @Autowired
     private UserMapper userMapper;
+    @Autowired
+    private TagsMapper tagsMapper;
 
     public static void main(String[] args) throws XMLStreamException, FileNotFoundException, ParseException {
 
@@ -41,7 +48,65 @@ public class Boot implements CommandLineRunner {
         return data;
     }
 
+    public void batchInsertTags() throws IOException, XMLStreamException {
+        final File dataFile = new File("G:\\st\\Tags.xml");
+        try (final FileInputStream inputStream = new FileInputStream(dataFile)) {
+            final XMLStreamReader reader = XMLInputFactory.newInstance().createXMLStreamReader(inputStream);
+            final List<Tag> tags = new ArrayList<>(1000);
+            while (reader.hasNext()) {
+                if (reader.getEventType() == XMLStreamConstants.START_ELEMENT && reader.getName().toString().equals("row")) {
+                    final int attributeCount = reader.getAttributeCount();
+                    if (attributeCount > 0) {
+                        final Tag tag = new Tag();
+                        try {
+                            for (int i = 0; i < attributeCount; i++) {
+                                final String value = Strings.nullToEmpty(reader.getAttributeValue(i));
+                                switch (reader.getAttributeName(i).toString()) {
+                                    case "Id":
+                                        tag.setId(Integer.parseInt(value));
+                                        break;
+                                    case "TagName":
+                                        tag.setTagName(value);
+                                        break;
+                                    case "Count":
+                                        tag.setCount(Integer.parseInt(value));
+                                        break;
+                                    case "ExcerptPostId":
+                                        tag.setExcerptPostId(Long.parseLong(value));
+                                        break;
+                                    case "WikiPostId":
+                                        tag.setWikiPostId(Long.parseLong(value));
+                                        break;
+                                    default:
+                                        break;
+                                }
+                            }
+                            tags.add(tag);
+                        } catch (Exception e) {
+                            e.printStackTrace();
+                        }
+                    }
+                    if (tags.size() >= 1000){
+                        tagsMapper.insertBatch(tags);
+                        tags.clear();
+                    }
+                }
+                reader.next();
+            }
+            if (!tags.isEmpty()){
+                tagsMapper.insertBatch(tags);
+                tags.clear();
+            }
+            reader.close();
+        }
+    }
+
     public void run(final String... args) throws Exception {
+        batchInsertTags();
+//        batchInsertUser();
+    }
+
+    private void batchInsertUser() throws FileNotFoundException, XMLStreamException, ParseException {
         final File dataFile = new File("G:\\stackoverflow.com-Users\\Users.xml");
         final FileInputStream inputStream = new FileInputStream(dataFile);
         final XMLStreamReader reader = XMLInputFactory.newInstance().createXMLStreamReader(inputStream);

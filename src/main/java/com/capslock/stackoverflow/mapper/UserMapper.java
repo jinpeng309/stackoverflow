@@ -10,22 +10,6 @@ import java.util.List;
 /**
  * Created by alvin.
  */
-
-/**
- * id INTEGER PRIMARY KEY,
- * reputation INTEGER  NOT NULL DEFAULT 0,
- * creationDate BIGINT,
- * displayName VARCHAR(40) NOT NULL DEFAULT "",
- * lastAccessDate BIGINT,
- * websiteUrl VARCHAR(128) NOT NULL DEFAULT "",
- * location VARCHAR(128) NOT NULL DEFAULT "",
- * abounMe VARCHAR(1024) NOT NULL DEFAULT "",
- * views INTEGER NOT NULL DEFAULT 0,
- * upVotes INTEGER NOT NULL DEFAULT 0,
- * downVotes INTEGER NOT NULL DEFAULT 0,
- * accountId INTEGER NOT NULL DEFAULT -1,
- * age INTEGER NOT NULL DEFAULT  -1
- */
 @Mapper
 public interface UserMapper {
     @Insert({
