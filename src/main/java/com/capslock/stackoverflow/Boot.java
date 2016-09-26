@@ -57,43 +57,21 @@ public class Boot implements CommandLineRunner {
                 if (reader.getEventType() == XMLStreamConstants.START_ELEMENT && reader.getName().toString().equals("row")) {
                     final int attributeCount = reader.getAttributeCount();
                     if (attributeCount > 0) {
-                        final Tag tag = new Tag();
                         try {
-                            for (int i = 0; i < attributeCount; i++) {
-                                final String value = Strings.nullToEmpty(reader.getAttributeValue(i));
-                                switch (reader.getAttributeName(i).toString()) {
-                                    case "Id":
-                                        tag.setId(Integer.parseInt(value));
-                                        break;
-                                    case "TagName":
-                                        tag.setTagName(value);
-                                        break;
-                                    case "Count":
-                                        tag.setCount(Integer.parseInt(value));
-                                        break;
-                                    case "ExcerptPostId":
-                                        tag.setExcerptPostId(Long.parseLong(value));
-                                        break;
-                                    case "WikiPostId":
-                                        tag.setWikiPostId(Long.parseLong(value));
-                                        break;
-                                    default:
-                                        break;
-                                }
-                            }
+                            final Tag tag = readTagEntity(reader, attributeCount);
                             tags.add(tag);
                         } catch (Exception e) {
                             e.printStackTrace();
                         }
                     }
-                    if (tags.size() >= 1000){
+                    if (tags.size() >= 1000) {
                         tagsMapper.insertBatch(tags);
                         tags.clear();
                     }
                 }
                 reader.next();
             }
-            if (!tags.isEmpty()){
+            if (!tags.isEmpty()) {
                 tagsMapper.insertBatch(tags);
                 tags.clear();
             }
@@ -101,9 +79,36 @@ public class Boot implements CommandLineRunner {
         }
     }
 
+    private Tag readTagEntity(final XMLStreamReader reader, final int attributeCount) {
+        final Tag tag = new Tag();
+        for (int i = 0; i < attributeCount; i++) {
+            final String value = Strings.nullToEmpty(reader.getAttributeValue(i));
+            switch (reader.getAttributeName(i).toString()) {
+                case "Id":
+                    tag.setId(Integer.parseInt(value));
+                    break;
+                case "TagName":
+                    tag.setTagName(value);
+                    break;
+                case "Count":
+                    tag.setCount(Integer.parseInt(value));
+                    break;
+                case "ExcerptPostId":
+                    tag.setExcerptPostId(Long.parseLong(value));
+                    break;
+                case "WikiPostId":
+                    tag.setWikiPostId(Long.parseLong(value));
+                    break;
+                default:
+                    break;
+            }
+        }
+        return tag;
+    }
+
     public void run(final String... args) throws Exception {
         batchInsertTags();
-//        batchInsertUser();
+        batchInsertUser();
     }
 
     private void batchInsertUser() throws FileNotFoundException, XMLStreamException, ParseException {
